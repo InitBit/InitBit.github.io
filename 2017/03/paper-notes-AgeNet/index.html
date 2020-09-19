@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="MfaX0rEfjiifheHeIWxWAjqdbD1UOqYrc-PYw6NfNJY">
+  <meta name="msvalidate.01" content="A9FCBE50F0784B48B5C7B38863D7ED42">
+  <meta name="baidu-site-verification" content="q1kU6ibIl7">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.14.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"tang.su","root":"/","scheme":"Gemini","version":"8.0.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"algolia":{"appID":"UUQV32070F","apiKey":"e70eb7210c2ebba8caab0a0f033642e6","indexName":"tangsu","hits":{"per_page":10}}};
+  </script>
+
+  <meta name="description" content="摘要：这篇论文要解决的问题是表观年龄估计，即从给定人脸的图片估计该人的外表年龄，而非真实年龄（某个人可能实际50岁，但是在标注者眼中看起来像35岁），面临的最大问题是表观年龄数据样本少。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AgeNet: Deeply Learned Regressor and Classifier for Robust Apparent Age Estimation 论文笔记">
+<meta property="og:url" content="https://tang.su/2017/03/paper-notes-AgeNet/index.html">
+<meta property="og:site_name" content="TS&#39; Blog">
+<meta property="og:description" content="摘要：这篇论文要解决的问题是表观年龄估计，即从给定人脸的图片估计该人的外表年龄，而非真实年龄（某个人可能实际50岁，但是在标注者眼中看起来像35岁），面临的最大问题是表观年龄数据样本少。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://tva1.sinaimg.cn/large/006y8mN6ly1g6y5giv35aj30fe09dgsk.jpg">
+<meta property="og:image" content="https://tang.su/images/paper-notes/AgeNet/pic2.png">
+<meta property="og:image" content="https://tang.su/images/paper-notes/AgeNet/pic3.png">
+<meta property="og:image" content="https://tang.su/images/paper-notes/AgeNet/pic4.png">
+<meta property="og:image" content="https://tang.su/images/paper-notes/AgeNet/pic5.png">
+<meta property="og:image" content="https://tang.su/images/paper-notes/AgeNet/pic6.png">
+<meta property="article:published_time" content="2017-03-31T06:55:13.000Z">
+<meta property="article:modified_time" content="2020-09-19T14:23:16.528Z">
+<meta property="article:author" content="TS">
+<meta property="article:tag" content="AgeNet">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tva1.sinaimg.cn/large/006y8mN6ly1g6y5giv35aj30fe09dgsk.jpg">
+
+
+<link rel="canonical" href="https://tang.su/2017/03/paper-notes-AgeNet/">
+
+
+<script data-pjax class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>AgeNet: Deeply Learned Regressor and Classifier for Robust Apparent Age Estimation 论文笔记 | TS' Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-78445267-1"></script>
+    <script data-pjax>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-78445267-1');
+      }
+    </script>
+
+
+  <script data-pjax>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?c592420cc2aca5b0e08fa6b3178605db";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">TS' Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">Life is short.</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container">
+  <div class="algolia-stats"><hr></div>
+  <div class="algolia-hits"></div>
+  <div class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E6%96%B0%E7%82%B9"><span class="nav-number">1.</span> <span class="nav-text">创新点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5"><span class="nav-number">2.</span> <span class="nav-text">基础概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E6%80%BB%E4%BD%93%E6%A1%86%E6%9E%B6"><span class="nav-number">3.</span> <span class="nav-text">网络总体框架</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#deeply-learned-age-regressor"><span class="nav-number">3.1.</span> <span class="nav-text">Deeply Learned Age Regressor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#deeply-learned-age-classifier"><span class="nav-number">3.2.</span> <span class="nav-text">Deeply Learned Age Classifier</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E%E9%80%9A%E7%94%A8%E5%88%B0%E7%89%B9%E5%AE%9A%E7%9A%84%E8%AE%AD%E7%BB%83%E6%96%B9%E6%B3%95"><span class="nav-number">4.</span> <span class="nav-text">从通用到特定的训练方法</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">TS</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">18</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/encodets" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;encodets" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ts@tang.su" title="E-Mail → mailto:ts@tang.su"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tang.su/2017/03/paper-notes-AgeNet/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="TS">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="TS' Blog">
+    </span>
+
+    
+    
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          AgeNet: Deeply Learned Regressor and Classifier for Robust Apparent Age Estimation 论文笔记
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2017-03-31 14:55:13" itemprop="dateCreated datePublished" datetime="2017-03-31T14:55:13+08:00">2017-03-31</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2020-09-19 22:23:16" itemprop="dateModified" datetime="2020-09-19T22:23:16+08:00">2020-09-19</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BA%E6%96%87%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">论文笔记</span></a>
+        </span>
+    </span>
+
+  
+    <span id="/2017/03/paper-notes-AgeNet/" class="post-meta-item leancloud_visitors" data-flag-title="AgeNet: Deeply Learned Regressor and Classifier for Robust Apparent Age Estimation 论文笔记" title="阅读次数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span class="leancloud-visitors-count"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><p>摘要：这篇论文要解决的问题是<strong>表观年龄估计</strong>，即从给定人脸的图片估计该人的<strong>外表年龄</strong>，而非<strong>真实年龄</strong>（某个人可能实际50岁，但是在标注者眼中看起来像35岁），面临的最大问题是<strong>表观年龄数据样本少</strong>。</p>
+<a id="more"></a>
+<h2 id="创新点">创新点</h2>
+<p>本文有两点创新：</p>
+<ol type="1">
+<li><p>融合了两种模型，基于<strong>实数值的回归模型</strong>以及基于<strong>高斯标签分布(Gaussian label distribution)的分类模型</strong>，两种模型都使用深度卷积神经网络来提取有表达力的年龄信息。</p></li>
+<li><p>为了避免网络在很小的表观年龄数据集上过拟合，采用了一种从<strong>通用到特定(general-to-specific)</strong>训练方式；首先使用大规模的从互联网收集人脸图像进行分类预训练，随后使用大规模的<strong>带有噪声的真实年龄</strong>数据集进行微调，最后才在很小的<strong>表观年龄训练数据集上</strong>进行微调。</p></li>
+</ol>
+<h2 id="基础概念">基础概念</h2>
+<p>首先需要详细定义一下<strong>表观年龄</strong>，表观年龄是在仅给出每个个体的照片的情况下由不同的志愿者标注出的年龄。与真实年龄相比，标注的表观年龄是<strong>可变的</strong>，但是不同标注者标注出的年龄<strong>均值通常是高度稳定的</strong>。本文采用的数据集是由ICCV2015 Looking at People Challenge提供的表观年龄数据集，总共包含了4699张图像，每一张图像带有一个均值标注以及标注的标准差。</p>
+<figure>
+<img src="https://tva1.sinaimg.cn/large/006y8mN6ly1g6y5giv35aj30fe09dgsk.jpg" alt="1490944367700" /><figcaption aria-hidden="true">1490944367700</figcaption>
+</figure>
+<p>然后介绍一下常见的<strong>对年龄进行编码的方式</strong>：</p>
+<ol type="1">
+<li><p>1-dimension real-value encoding</p>
+<p>用一个实数值代表一个人的年龄，可以用回归模型进行建模。</p></li>
+<li><p>0/1 encoding</p>
+<p>把不同的年龄当做不同的类，即[0,0,0…,1,0,0]，把年龄估计看做分类问题。</p></li>
+<li><p>Label distribution encoding</p>
+<p>该方法的基本思想是使用每个label中的description degree来表达每一个label实例。本文具体用的是高斯标签分布，具体表述如下：对于一张给定的图片I，如果它的年龄是y，那么使用一个多维向量来表达这个年龄label，这个多维向量的第j维是：</p></li>
+</ol>
+ $$l_j=exp(\frac{-(j-y)^2}{2*\sigma^2})/\sigma,j=1,...,M$$ 
+<p>j代表第j维(1,2,3….85)，y是给出的年龄label，<span class="math inline">\(\sigma\)</span>是label的标准差(因为label是由多个志愿者给出的，因此会有一个标准差)，M是特征向量的最大维度(同时也是训练时可能遇到的最大年龄)。下图是一个示例：</p>
+<figure>
+<img src="/images/paper-notes/AgeNet/pic2.png" alt="1490944716525" /><figcaption aria-hidden="true">1490944716525</figcaption>
+</figure>
+<h2 id="网络总体框架">网络总体框架</h2>
+<figure>
+<img src="/images/paper-notes/AgeNet/pic3.png" alt="1490948907694" /><figcaption aria-hidden="true">1490948907694</figcaption>
+</figure>
+<p>本文方法的基本思想是将年龄估计器同时建模为一个分类和回归问题，最后将两个模型进行互补性地融合来获取更好的性能。</p>
+<p>本文的网络在GoogLeNet上进行了两处修改，首先移除了两个辅助损失层，然后在每一个ReLU前增加了BN，并且移除掉了所有的dropout来加速收敛。</p>
+<p>在deep age regressor中，使用<strong>欧式距离</strong>来度量两个一维实值编码年龄的距离。为了避免网络中尺度不平衡的问题，在欧式距离loss前加入了sigmoid。</p>
+<p>在deep age classifier中，年龄被编码为85维的高斯向量，使用交叉熵进行训练。</p>
+<h3 id="deeply-learned-age-regressor">Deeply Learned Age Regressor</h3>
+<p>建模为端到端的回归问题，将表观年龄除以100，然后将网络输出的标签增加一个sigmoid层归一化到[0,1]之间。随后计算欧式loss：  $$ E(W)=\frac1{2N}\sum_{i=1}^N||\hat y_n-y_n||_2^2 $$ </p>
+<p>最后的年龄估计为：</p>
+ $$ R=f(\hat y_n*100+0.5) $$ 
+<h3 id="deeply-learned-age-classifier">Deeply Learned Age Classifier</h3>
+<p>最简单的方式是使用0/1编码结合softmax loss，但是这种策略在编码距离时平等地对待了所有的年龄，没有考虑到邻近年龄估计的关系。（比如label是35岁，在网络输出35岁概率0.1、38岁的概率0.9与网络输出35岁概率0.1、80岁的概率是0.9两种情况下，产生的loss是相同的）。</p>
+<p>因此在这里本文使用了前文介绍的label distribution方法编码，使用sigmoid交叉熵进行分类:</p>
+ $$E(W)=\frac{-1} N \sum_{i=1}^N \sum_{n=1}^L[p_{in}log\hat p_{in}-(1-p_{in})log(1-\hat p_{in})]$$ 
+<p>网络在预测时，使用输出置信度最大的那一维代表的年龄作为估计值。</p>
+<h2 id="从通用到特定的训练方法">从通用到特定的训练方法</h2>
+<p>即前文已经介绍的pre-train with face identities, fine-tune with real age, fine-tune with apparent age.三个阶段的训练。</p>
+<figure>
+<img src="/images/paper-notes/AgeNet/pic4.png" alt="1490948929615" /><figcaption aria-hidden="true">1490948929615</figcaption>
+</figure>
+<p>此外进行了一些人脸检测、人脸特征点定位以及人脸归一化的预处理。</p>
+<p>最终模型的输出融合了8个网络的结果，使用不同的裁剪大小来训练分类以及回归器，在训练阶段只使用图像中央部位的patch输入到网络。</p>
+<figure>
+<img src="/images/paper-notes/AgeNet/pic5.png" alt="1490948942174" /><figcaption aria-hidden="true">1490948942174</figcaption>
+</figure>
+<p>此外，作者对比了不同迁移学习方法的性能，得出了以下一些结论：</p>
+<figure>
+<img src="/images/paper-notes/AgeNet/pic6.png" alt="1490948953990" /><figcaption aria-hidden="true">1490948953990</figcaption>
+</figure>
+<ol type="1">
+<li><p>不预训练直接随机初始化训练网络时效果不好，因为网络在小的训练集上面过拟合。</p></li>
+<li><p>预训练人脸多分类网络比在真实年龄数据集上预训练效果更好，意味着从与相似的任务上使用大规模数据集训练可以提升网络的泛化性。</p></li>
+<li><p>尽管互联网搜集的人脸真实年龄标签有很多噪声，但是还是可以帮助提升表观年龄估计的性能，证明了这个从通用到特殊的迁移学习方法的鲁棒性。</p></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>TS
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://tang.su/2017/03/paper-notes-AgeNet/" title="AgeNet: Deeply Learned Regressor and Classifier for Robust Apparent Age Estimation 论文笔记">https://tang.su/2017/03/paper-notes-AgeNet/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/AgeNet/" rel="tag"># AgeNet</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2017/03/install-scrapy/" rel="prev" title="Anaconda下安装Scrapy">
+                  <i class="fa fa-chevron-left"></i> Anaconda下安装Scrapy
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2017/03/openwrt-ipv6-nat/" rel="next" title="在OpenWrt上配置原生IPv6 NAT">
+                  在OpenWrt上配置原生IPv6 NAT <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+  
+  
+  
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">粤ICP备17068581号 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2016 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">TS</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+  <div class="powered-by">
+  由<a href="https://www.upyun.com/?utm_source=lianmeng&utm_medium=referral" class="theme-link" rel="noopener" target="_blank"><img src="/images/upyun_logo.png" width="50" style="display:inline;"></a> 提供CDN服务
+  </div>
+
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@next-theme/pjax@0.4.0/pjax.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '.page-configurations',
+    '.main-inner',
+    '.post-toc-wrap',
+    '.languages',
+    '.pjax'
+  ],
+  analytics: false,
+  cacheBust: false,
+  scrollRestoration: false,
+  scrollTo: !CONFIG.bookmark.enable
+});
+
+document.addEventListener('pjax:success', () => {
+  pjax.executeScripts(document.querySelectorAll('script[data-pjax], .pjax script'));
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  const hasTOC = document.querySelector('.post-toc');
+  document.querySelector('.sidebar-inner').classList.toggle('sidebar-nav-active', hasTOC);
+  document.querySelector(hasTOC ? '.sidebar-nav-toc' : '.sidebar-nav-overview').click();
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+  
+  <script data-pjax>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="//cdn.jsdelivr.net/npm/algoliasearch@4.4.0/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4.7.1/dist/instantsearch.production.min.js"></script><script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+<script data-pjax>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      const visitors = document.querySelector('.leancloud_visitors');
+      const url = decodeURI(visitors.id);
+      const title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            const counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      const visitors = document.querySelectorAll('.leancloud_visitors');
+      const entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            const target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    const { app_id, app_key, server_url } = {"enable":true,"app_id":"JRqyYmFhjgT32nlWjTflgE53-gzGzoHsz","app_key":"9CPEBoVd2G2P2bjEnfM0sjIx","server_url":null,"security":false};
+    function fetchData(api_server) {
+      const Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    const api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+    <div class="pjax">
+  
+
+  
+      <script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              const target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    const script = document.createElement('script');
+    script.src = '//cdn.jsdelivr.net/npm/mathjax@3.1.0/es5/tex-mml-chtml.js';
+    script.defer = true;
+    document.head.appendChild(script);
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.typesetClear();
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+    </div>
+</body>
+</html>

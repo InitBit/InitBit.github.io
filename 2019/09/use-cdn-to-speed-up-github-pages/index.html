@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.1.1">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+  <meta name="google-site-verification" content="MfaX0rEfjiifheHeIWxWAjqdbD1UOqYrc-PYw6NfNJY">
+  <meta name="msvalidate.01" content="A9FCBE50F0784B48B5C7B38863D7ED42">
+  <meta name="baidu-site-verification" content="q1kU6ibIl7">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.14.0/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"tang.su","root":"/","scheme":"Gemini","version":"8.0.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"algolia":{"appID":"UUQV32070F","apiKey":"e70eb7210c2ebba8caab0a0f033642e6","indexName":"tangsu","hits":{"per_page":10}}};
+  </script>
+
+  <meta name="description" content="毕业以后，一直没有更新博客。工作这一年多来，愈发觉得应该记录下工作中的思考和感悟，趁昨日假期，折腾了一整天，重新配置了博客，并加入了CDN优化，现在这访问速度，自己都忍不住想多刷新几次。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="利用CDN加速Github Pages访问">
+<meta property="og:url" content="https://tang.su/2019/09/use-cdn-to-speed-up-github-pages/index.html">
+<meta property="og:site_name" content="TS&#39; Blog">
+<meta property="og:description" content="毕业以后，一直没有更新博客。工作这一年多来，愈发觉得应该记录下工作中的思考和感悟，趁昨日假期，折腾了一整天，重新配置了博客，并加入了CDN优化，现在这访问速度，自己都忍不住想多刷新几次。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://tang.su/images/use-cdn-to-speed-up-github-pages/github.png">
+<meta property="og:image" content="https://tang.su/images/use-cdn-to-speed-up-github-pages/tencent_cdn.png">
+<meta property="og:image" content="https://tang.su/images/use-cdn-to-speed-up-github-pages/upyun_cdn.png">
+<meta property="article:published_time" content="2019-09-14T06:10:03.000Z">
+<meta property="article:modified_time" content="2020-09-19T14:23:16.530Z">
+<meta property="article:author" content="TS">
+<meta property="article:tag" content="CDN">
+<meta property="article:tag" content="图床">
+<meta property="article:tag" content="https">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://tang.su/images/use-cdn-to-speed-up-github-pages/github.png">
+
+
+<link rel="canonical" href="https://tang.su/2019/09/use-cdn-to-speed-up-github-pages/">
+
+
+<script data-pjax class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>利用CDN加速Github Pages访问 | TS' Blog</title>
+  
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-78445267-1"></script>
+    <script data-pjax>
+      if (CONFIG.hostname === location.hostname) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-78445267-1');
+      }
+    </script>
+
+
+  <script data-pjax>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?c592420cc2aca5b0e08fa6b3178605db";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">TS' Blog</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">Life is short.</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup">
+        <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container">
+  <div class="algolia-stats"><hr></div>
+  <div class="algolia-hits"></div>
+  <div class="algolia-pagination"></div>
+</div>
+
+      
+    </div>
+  </div>
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <section class="post-toc-wrap sidebar-panel">
+          <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0hexo%E5%8F%8Anext%E4%B8%BB%E9%A2%98"><span class="nav-number">2.</span> <span class="nav-text">更新Hexo及Next主题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%80%E5%90%AFhttps"><span class="nav-number">3.</span> <span class="nav-text">开启Https</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8cdn%E5%8A%A0%E9%80%9Fjs%E5%8F%8Acss%E6%96%87%E4%BB%B6%E7%9A%84%E8%AE%BF%E9%97%AE"><span class="nav-number">4.</span> <span class="nav-text">使用CDN加速js及CSS文件的访问</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEcdn%E6%9C%8D%E5%8A%A1%E8%BF%9B%E8%A1%8C%E5%85%A8%E7%AB%99%E5%8A%A0%E9%80%9F"><span class="nav-number">5.</span> <span class="nav-text">配置CDN服务进行全站加速</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%8F%88%E6%8B%8D%E4%BA%91"><span class="nav-number">5.1.</span> <span class="nav-text">配置又拍云</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%81%E8%AF%81%E5%A5%87%E8%BF%B9"><span class="nav-number">6.</span> <span class="nav-text">见证奇迹</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%8E%E8%AE%B0"><span class="nav-number">7.</span> <span class="nav-text">后记</span></a></li></ol></div>
+      </section>
+      <!--/noindex-->
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">TS</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">18</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/encodets" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;encodets" rel="noopener" target="_blank"><i class="fab fa-github fa-fw"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:ts@tang.su" title="E-Mail → mailto:ts@tang.su"><i class="fa fa-envelope fa-fw"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </section>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://tang.su/2019/09/use-cdn-to-speed-up-github-pages/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="TS">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="TS' Blog">
+    </span>
+
+    
+    
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          利用CDN加速Github Pages访问
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2019-09-14 14:10:03" itemprop="dateCreated datePublished" datetime="2019-09-14T14:10:03+08:00">2019-09-14</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2020-09-19 22:23:16" itemprop="dateModified" datetime="2020-09-19T22:23:16+08:00">2020-09-19</time>
+      </span>
+
+  
+    <span id="/2019/09/use-cdn-to-speed-up-github-pages/" class="post-meta-item leancloud_visitors" data-flag-title="利用CDN加速Github Pages访问" title="阅读次数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span class="leancloud-visitors-count"></span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/hint.css/2.4.1/hint.min.css"><p>毕业以后，一直没有更新博客。工作这一年多来，愈发觉得应该记录下工作中的思考和感悟，趁昨日假期，折腾了一整天，重新配置了博客，并加入了CDN优化，现在这访问速度，自己都忍不住想多刷新几次。</p>
+<a id="more"></a>
+<h2 id="前言">前言</h2>
+<p>最最开始我是把Hexo博客双线架设在Github Pages和Coding Pages上，然后在Dnspod上配置国外CNAME到Github Pages上，国内则CNAME至Coding Pages。那时Coding Pages的访问速度确实也挺好，只是后来Coding Pages引入了跳转广告，之后我就撤掉了在它上面的部署。 随后腾讯云推出了折扣的云主机服务，我就买了三年的服务，在云主机上部署了git及nginx。虽然这台云主机的带宽只有1Mbps，但是对于我这小站来说，完全够用了，访问速度也是十分的优秀，后来我还在腾讯云上申请了SSL证书并配置了https服务。 在今年之前的某个时候，我想更新一下博客，但由于毕业的时候我丢掉了之前的ssh秘钥（这也是我中间一直没有更新博客的原因之一。。。），随后在腾讯云上添加新秘钥时又出错，机器连接不上，后来只好重置了腾讯云的主机，然后重新部署了Github Pages（不要问我为什么不重新部署在腾讯云上，因为心累），记得那时Github Pages还不支持自定义域名开始https，因此网站也堕落回了没有锁的状态。 直到昨天，我决定重新开始维护博客。</p>
+<h2 id="更新hexo及next主题">更新Hexo及Next主题</h2>
+<p>首先是更新<a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo">Hexo</a>和<a target="_blank" rel="noopener" href="https://github.com/theme-next/hexo-theme-next">Next</a>主题到最新版（目前分别对应3.9.0和7.4.0）。但是更新之后，我发现首页和正文的字体相比以前变得异常的大，随后通过更改next目录下的<code>_config.yml</code>中的<code>font</code>配置解决，设置此处的size为0.9（非直接设置字体大小，像是设置显示的放大倍数，根据注释猜测基数是16）。 <figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">font:</span></span><br><span class="line">  <span class="attr">global:</span></span><br><span class="line">    <span class="attr">external:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">family:</span> <span class="string">Lato</span></span><br><span class="line">    <span class="attr">size:</span> <span class="number">0.9</span></span><br></pre></td></tr></table></figure></p>
+<h2 id="开启https">开启Https</h2>
+<p>开启https这一步就很简单了，目前Github已经支持自定义域名强制开启https，在repo的setting下找到<code>Enforce HTTPS</code>并打上勾即可。 在我第一次开启的时候，发现应该打勾的地方是灰色状态无法勾选，后来搜索之后，发现先删掉<code>Custom domain</code>内的域名，保存一下随后重填即可勾选上。此时已经可以通过带https的域名访问博客了。</p>
+<p><img src="/images/use-cdn-to-speed-up-github-pages/github.png" /></p>
+<h2 id="使用cdn加速js及css文件的访问">使用CDN加速js及CSS文件的访问</h2>
+<p>Next主题引用了大量的js及CSS文件，我们可以配置国内的CDN来加速这些文件的访问，我主要使用的是<a target="_blank" rel="noopener" href="https://www.bootcdn.cn/">BootCDN</a>提供的服务。在Next配置文件中找到<code>vendors</code>设置，将CDN的链接配置进去即可。如下图所示：</p>
+<figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># jquery: //cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js</span></span><br><span class="line"><span class="comment"># fancybox: //cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js</span></span><br><span class="line"><span class="comment"># fancybox_css: //cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css</span></span><br><span class="line">jquery: //cdn.bootcss.com/jquery/3.4.1/jquery.min.js</span><br><span class="line">fancybox: //cdn.bootcss.com/fancybox/3.5.7/jquery.fancybox.min.js</span><br><span class="line">fancybox_css: //cdn.bootcss.com/fancybox/3.5.7/jquery.fancybox.min.css</span><br></pre></td></tr></table></figure>
+<p><strong>注意</strong>：如果注释中写的链接指定了版本，则在<a target="_blank" rel="noopener" href="https://www.bootcdn.cn/">BootCDN</a>中也最好使用对应版本的镜像链接，否则网页显示可能出错。</p>
+<h2 id="配置cdn服务进行全站加速">配置CDN服务进行全站加速</h2>
+<p>此时网站的访问速度有一些提升了，但还不太理想，毕竟每次都需要请求Github远在国外的服务器。由于之前我的网站已经进行过备案，因此可以使用国内的CDN服务（国内的CDN服务基本都要求网站需要进行过备案，没有备案的同学可以尝试使用Cloudflare等提供的CDN）。大体搜索了一下，腾讯云和又拍云有提供免费的支持https的CDN（当然各有限制）。 ### 配置腾讯云 出于对腾讯云大品牌的信任，我自然先选择了腾讯云（然后后来发现这是一个错误。。。）。 配置腾讯云的CDN本身很简单，进入<a target="_blank" rel="noopener" href="https://console.cloud.tencent.com/cdn/access">域名管理</a>处，添加域名，进行一些基本配置即可，下面记录一下一些关键的配置。 源站信息填写<a target="_blank" rel="noopener" href="https://help.github.com/en/articles/troubleshooting-custom-domains#https-errors">Github提供的IP地址</a>即可： <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">185.199.108.153</span><br><span class="line">185.199.109.153</span><br><span class="line">185.199.110.153</span><br><span class="line">185.199.111.153</span><br></pre></td></tr></table></figure> 回源配置填写网站绑定的域名(对我而言是<code>tang.su</code>)。 在<strong>高级配置</strong>中找到<strong>HTTPS</strong>配置，打开强制跳转HTTPS，设置301跳转。 <img src="/images/use-cdn-to-speed-up-github-pages/tencent_cdn.png" /> 随后点击右侧的<code>前往配置</code>，并<code>编辑证书</code>，回源方式选择<strong>协议跟随</strong>（因为在Github里我们已经打开了强制https，如果使用http协议回源会失败）。 <strong>HTTP2.0配置</strong>和<strong>SEO优化配置</strong>下的开关也都可以打开。</p>
+<p>配置了这些之后，我们能拿到腾讯云提供的CNAME地址，去Dnspod上绑定一下即可。 我设置的是国外地址CNAME至Github，国内CNAME至腾讯云提供的CDN地址。 见证奇迹的时刻到了，强刷网页，咦？好像并没有怎么变快？再刷，好像又变快了，到底怎么回事？点开<code>开发者工具</code>，发现第一次强刷网页时网站载入很慢，header内的信息显示的<code>Hit From Upstream</code>，即没有命中缓存。但此时再重刷会发现能命中缓存，然后速度也快了很多。但是没有命中缓存的时候，网站的访问速度还不如我直接访问Github！当然，不如直接访问Github Pages是正常的，毕竟多了一道中转，需要腾讯云从源服务器去拿数据，但是这个访问速度慢的有点太夸张。在我昨晚几个小时的测试中，未命中缓存时经常需要十多秒才能打开博客内的某个网页。我开始一直怀疑是我腾讯云内的设置有问题，于是翻来覆去的检查试验，最后也没发现什么问题，只好承认就是这个速度了。</p>
+<h3 id="配置又拍云">配置又拍云</h3>
+<p>配置好腾讯云CDN之后的速度实在难以令我满意，后来抱着尝试的心态又去注册了又拍云。配置<a target="_blank" rel="noopener" href="https://console.upyun.com/services/cdn/">又拍云CDN</a>的方式没有什么不同，创建服务，<strong>源站设置</strong>和<strong>回源 Host</strong>与之前设置保持一致，同时配置好HTTPS证书，并强制HTTPS访问。 <img src="/images/use-cdn-to-speed-up-github-pages/upyun_cdn.png" /> 需要说明的是，又拍云也提供了免费的HTTPS证书申请服务，但是我半夜申请了之后，发现需要人工审核，我又急着使用，于是把之前腾讯云的证书下载了下来，并导入了又拍云。 <strong>导入方法</strong>： 在腾讯云下载证书解压之后，Nginx目录下会分别有一个<code>.key</code>和<code>.crt</code>结尾的文件。用文本编辑器打开这两个文件，将<code>.crt</code>内的内容<strong>全部</strong>复制至<strong>pem 证书</strong>内，将<code>.key</code>的<strong>全部</strong>内容复制至<strong>私钥</strong>内导入即可。 全部配置好之后，同样可以拿到又拍云提供的CNAME地址，将Dnspod内的解析更改至又拍云的地址即可。</p>
+<h2 id="见证奇迹">见证奇迹</h2>
+<p>这个时候我又尝试访问了一下，发现速度比以前快很多，而且在博客内的各个页面跳转及强刷的速度都很快。我没太从又拍云返回的header信息中看出是否命中CDN缓存，但是目前看，无论有没有命中缓存，速度都比之前使用腾讯云CDN时快很多，强制刷新首页也能在两三秒内加载出内容，总之我自己十分满意。</p>
+<h2 id="后记">后记</h2>
+<p>直到现在（这句话好像显得已经过去了很久，然而并没有），我也没弄明白使用腾讯云的时候加速效果为什么那么不明显，但是总之，目前使用又拍云做CDN的效果令我满意，然后也加入了<a target="_blank" rel="noopener" href="https://www.upyun.com/league">又拍云联盟计划</a>，我当然不会告诉你其实就是在页面底部挂个又拍云的logo就可以了。。。等审核通过之后，以后每个月会有15G的CDN流量，当然是远远超过我实际所需了。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          
+
+<div class="post-copyright">
+<ul>
+  <li class="post-copyright-author">
+      <strong>本文作者： </strong>TS
+  </li>
+  <li class="post-copyright-link">
+      <strong>本文链接：</strong>
+      <a href="https://tang.su/2019/09/use-cdn-to-speed-up-github-pages/" title="利用CDN加速Github Pages访问">https://tang.su/2019/09/use-cdn-to-speed-up-github-pages/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+          <div class="post-tags">
+              <a href="/tags/CDN/" rel="tag"># CDN</a>
+              <a href="/tags/%E5%9B%BE%E5%BA%8A/" rel="tag"># 图床</a>
+              <a href="/tags/https/" rel="tag"># https</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018/03/use-docker-deploy-hexo/" rel="prev" title="Docker+Nginx+SSL部署Hexo博客到自有VPS">
+                  <i class="fa fa-chevron-left"></i> Docker+Nginx+SSL部署Hexo博客到自有VPS
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/09/upgrade-hexo-to-5-0/" rel="next" title="升级Hexo到5.0">
+                  升级Hexo到5.0 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+  
+  
+  
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+  <div class="beian"><a href="https://beian.miit.gov.cn/" rel="noopener" target="_blank">粤ICP备17068581号 </a>
+  </div>
+
+<div class="copyright">
+  
+  &copy; 2016 – 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">TS</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a> 强力驱动
+  </div>
+  <div class="powered-by">
+  由<a href="https://www.upyun.com/?utm_source=lianmeng&utm_medium=referral" class="theme-link" rel="noopener" target="_blank"><img src="/images/upyun_logo.png" width="50" style="display:inline;"></a> 提供CDN服务
+  </div>
+
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.0/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/@next-theme/pjax@0.4.0/pjax.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+  <script>
+var pjax = new Pjax({
+  selectors: [
+    'head title',
+    '.page-configurations',
+    '.main-inner',
+    '.post-toc-wrap',
+    '.languages',
+    '.pjax'
+  ],
+  analytics: false,
+  cacheBust: false,
+  scrollRestoration: false,
+  scrollTo: !CONFIG.bookmark.enable
+});
+
+document.addEventListener('pjax:success', () => {
+  pjax.executeScripts(document.querySelectorAll('script[data-pjax], .pjax script'));
+  NexT.boot.refresh();
+  // Define Motion Sequence & Bootstrap Motion.
+  if (CONFIG.motion.enable) {
+    NexT.motion.integrator
+      .init()
+      .add(NexT.motion.middleWares.subMenu)
+      .add(NexT.motion.middleWares.postList)
+      .bootstrap();
+  }
+  const hasTOC = document.querySelector('.post-toc');
+  document.querySelector('.sidebar-inner').classList.toggle('sidebar-nav-active', hasTOC);
+  document.querySelector(hasTOC ? '.sidebar-nav-toc' : '.sidebar-nav-overview').click();
+  NexT.utils.updateSidebarPosition();
+});
+</script>
+
+
+  
+  <script data-pjax>
+    (function(){
+      var bp = document.createElement('script');
+      var curProtocol = window.location.protocol.split(':')[0];
+      bp.src = (curProtocol === 'https') ? 'https://zz.bdstatic.com/linksubmit/push.js' : 'http://push.zhanzhang.baidu.com/push.js';
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(bp, s);
+    })();
+  </script>
+
+
+
+
+  <script src="//cdn.jsdelivr.net/npm/algoliasearch@4.4.0/dist/algoliasearch-lite.umd.js"></script>
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@4.7.1/dist/instantsearch.production.min.js"></script><script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+<script data-pjax>
+  (function() {
+    function leancloudSelector(url) {
+      url = encodeURI(url);
+      return document.getElementById(url).querySelector('.leancloud-visitors-count');
+    }
+
+    function addCount(Counter) {
+      const visitors = document.querySelector('.leancloud_visitors');
+      const url = decodeURI(visitors.id);
+      const title = visitors.dataset.flagTitle;
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            const counter = results[0];
+            leancloudSelector(url).innerText = counter.time + 1;
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .catch(error => {
+                console.error('Failed to save visitor count', error);
+              });
+          } else {
+              Counter('post', '/classes/Counter', { title, url, time: 1 })
+                .then(response => response.json())
+                .then(() => {
+                  leancloudSelector(url).innerText = 1;
+                })
+                .catch(error => {
+                  console.error('Failed to create', error);
+                });
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    function showTime(Counter) {
+      const visitors = document.querySelectorAll('.leancloud_visitors');
+      const entries = [...visitors].map(element => {
+        return decodeURI(element.id);
+      });
+
+      Counter('get', '/classes/Counter?where=' + encodeURIComponent(JSON.stringify({ url: { '$in': entries } })))
+        .then(response => response.json())
+        .then(({ results }) => {
+          for (let url of entries) {
+            const target = results.find(item => item.url === url);
+            leancloudSelector(url).innerText = target ? target.time : 0;
+          }
+        })
+        .catch(error => {
+          console.error('LeanCloud Counter Error', error);
+        });
+    }
+
+    const { app_id, app_key, server_url } = {"enable":true,"app_id":"JRqyYmFhjgT32nlWjTflgE53-gzGzoHsz","app_key":"9CPEBoVd2G2P2bjEnfM0sjIx","server_url":null,"security":false};
+    function fetchData(api_server) {
+      const Counter = (method, url, data) => {
+        return fetch(`${api_server}/1.1${url}`, {
+          method,
+          headers: {
+            'X-LC-Id'     : app_id,
+            'X-LC-Key'    : app_key,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    }
+
+    const api_server = app_id.slice(-9) !== '-MdYXbMMI' ? server_url : `https://${app_id.slice(0, 8).toLowerCase()}.api.lncldglobal.com`;
+
+    if (api_server) {
+      fetchData(api_server);
+    } else {
+      fetch('https://app-router.leancloud.cn/2/route?appId=' + app_id)
+        .then(response => response.json())
+        .then(({ api_server }) => {
+          fetchData('https://' + api_server);
+        });
+    }
+  })();
+</script>
+
+
+    <div class="pjax">
+  
+
+  
+
+  
+
+    </div>
+</body>
+</html>

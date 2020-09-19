@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?><?xml-stylesheet type="text/xsl" href="sitemap.xsl"?>
+<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+    <url>
+    <loc>https://tang.su/</loc>
+    <changefreq>daily</changefreq>
+    <priority>1</priority>
+</url>
+
+    <url>
+        <loc>https://tang.su/2020/09/upgrade-hexo-to-5-0/</loc>
+        <lastmod>2020-09-19T14:23:16.531Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2020/09/deploy-github-pages-to-upyun-vercel/</loc>
+        <lastmod>2020-09-19T14:23:16.531Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2017/05/deploy-shadowsocks/</loc>
+        <lastmod>2020-09-19T14:23:16.530Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2018/03/use-docker-deploy-hexo/</loc>
+        <lastmod>2020-09-19T14:23:16.530Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2017/05/config-hadoop-pseudo-distributed/</loc>
+        <lastmod>2020-09-19T14:23:16.530Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2019/09/use-cdn-to-speed-up-github-pages/</loc>
+        <lastmod>2020-09-19T14:23:16.530Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2017/03/openwrt-ipv6-nat/</loc>
+        <lastmod>2020-09-19T14:23:16.529Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2017/04/Y1s-lan-wan/</loc>
+        <lastmod>2020-09-19T14:23:16.529Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2017/04/paper-notes-spatial-transformer-network/</loc>
+        <lastmod>2020-09-19T14:23:16.529Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2017/04/TensorFlow-center-loss/</loc>
+        <lastmod>2020-09-19T14:23:16.529Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2017/01/export-TensorFlow-network/</loc>
+        <lastmod>2020-09-19T14:23:16.528Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2017/03/pointers-to-arrays/</loc>
+        <lastmod>2020-09-19T14:23:16.528Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2017/03/install-scrapy/</loc>
+        <lastmod>2020-09-19T14:23:16.528Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2017/03/paper-notes-AgeNet/</loc>
+        <lastmod>2020-09-19T14:23:16.528Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2016/05/install-tensorflow/</loc>
+        <lastmod>2020-09-19T14:23:16.527Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2016/06/compile-opencv-python3/</loc>
+        <lastmod>2020-09-19T14:23:16.527Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2016/11/compile-anaconda3-caffe/</loc>
+        <lastmod>2020-09-19T14:23:16.527Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+    <url>
+        <loc>https://tang.su/2017/01/manually-create-summary/</loc>
+        <lastmod>2020-09-19T14:23:16.527Z</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>1</priority>
+    
+    
+    </url>
+
+</urlset>
+<!-- XML Sitemap -->
+
